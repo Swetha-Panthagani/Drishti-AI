@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Missing Person Review</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background-color: #3b5a77;
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: center;
+        }
+        .container {
+            padding: 2rem 1rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+        h1, h2, h3 {
+            color: #3b5a77;
+        }
+        .galleries {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        .gallery-container {
+            width: 48%;
+        }
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+            min-height: 150px;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .image-item {
+            position: relative;
+        }
+        .image-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .image-item input[type="radio"] {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+        }
+        .actions {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .actions button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            background-color: #3b5a77;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .actions button:hover {
+            background-color: #4a6b8a;
+        }
+        #results {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .upload-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Admin - Missing Person Review</h1>
+    </header>
+    <div class="container">
+        <div class="upload-form">
+            <h2>Upload Admin Photos (up to 2)</h2>
+            <form action="/admin/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="photos" accept="image/*" multiple required>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+
+        <div class="galleries">
+            <div class="gallery-container">
+                <h2>User Uploads</h2>
+                <div class="image-gallery">
+                    {% for image_file in user_images %}
+                    <div class="image-item">
+                        <img src="{{ url_for('static', filename='user_uploads/' + image_file) }}" alt="{{ image_file }}">
+                        <input type="radio" name="user_image" value="{{ image_file }}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="gallery-container">
+                <h2>Admin Uploads</h2>
+                <div class="image-gallery">
+                    {% for image_file in admin_images %}
+                    <div class="image-item">
+                        <img src="{{ url_for('static', filename='admin_uploads/' + image_file) }}" alt="{{ image_file }}">
+                        <input type="radio" name="admin_image" value="{{ image_file }}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button id="compareBtn">Compare Selected Images</button>
+        </div>
+
+        <h2>Comparison Result</h2>
+        <div id="results">
+            <p>Select one image from each gallery and click "Compare" to see the result.</p>
+        </div>
+    </div>
+    <script>
+        document.getElementById('compareBtn').addEventListener('click', () => {
+            const selectedUserImage = document.querySelector('input[name="user_image"]:checked');
+            const selectedAdminImage = document.querySelector('input[name="admin_image"]:checked');
+
+            if (!selectedUserImage || !selectedAdminImage) {
+                alert('Please select one image from each gallery to compare.');
+                return;
+            }
+
+            const userImage = selectedUserImage.value;
+            const adminImage = selectedAdminImage.value;
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<p>Comparing ${userImage} and ${adminImage}...</p>`;
+            
+            fetch('/compare', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_image: userImage, admin_image: adminImage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultsDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                } else {
+                    resultsDiv.innerHTML = `<h3>Comparison Result:</h3><p>${data.result}</p>`;
+                }
+            })
+            .catch(error => {
+                resultsDiv.innerHTML = `<p style="color: red;">An unexpected error occurred. Please try again.</p>`;
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

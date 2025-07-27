@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Safety Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            background-color: #eef2f6;
+            color: #444;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #3b5a77;
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            color: white;
+            margin-bottom: 0;
+        }
+        h1, h2, h3 {
+            color: #3b5a77;
+            margin-bottom: 0.75rem;
+        }
+        .dashboard-container {
+            padding: 2rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .card {
+            background-color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card p {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #5a809e;
+            margin-top: 0.5rem;
+        }
+        .card h3 i {
+            margin-right: 0.5rem;
+            color: #5a809e;
+        }
+        .heatmap-section, .emergency-actions, .zone-summaries, .incident-log, .chatbot-section {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2.5rem;
+        }
+        .emergency-actions {
+            text-align: center;
+        }
+        .emergency-actions button {
+            background-color: #5a809e;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            margin: 0.75rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background-color 0.3s ease;
+        }
+        .emergency-actions button:hover {
+            background-color: #46637d;
+        }
+        .incident-log table, .summaries-table table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+        .incident-log th, .incident-log td, .summaries-table th, .summaries-table td {
+            border: 1px solid #ddeeef;
+            padding: 1rem;
+            text-align: left;
+        }
+        .incident-log th, .summaries-table th {
+            background-color: #f0f4f8;
+            font-weight: bold;
+            color: #3b5a77;
+        }
+        #heatmap {
+            width: 100%;
+            height: 400px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) inset;
+        }
+        .zone {
+            flex-basis: 48%;
+            height: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            border-radius: 8px;
+            margin: 1%;
+            transition: background-color 0.5s ease;
+        }
+        .zone.green {
+            background-color: #2ecc71;
+        }
+        .zone.yellow {
+            background-color: #f39c12;
+        }
+        .zone.red {
+            background-color: #e74c3c;
+        }
+        .chatbot-section {
+            margin-top: 2.5rem;
+        }
+        #chatbox {
+            height: 300px;
+            border: 1px solid #ddeeef;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            margin-bottom: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+        .message.user {
+            background-color: #e9f2ff;
+            align-self: flex-end;
+        }
+        .message.agent {
+            background-color: #f0f0f0;
+            align-self: flex-start;
+        }
+        .chat-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .chat-input input[type="text"] {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddeeef;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .chat-input button {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        .chat-input button i {
+            margin: 0;
+        }
+        .chat-input .send-button {
+            background-color: #5a809e;
+            color: white;
+        }
+        .chat-input .send-button:hover {
+            background-color: #46637d;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Event Safety Dashboard</h1>
+    </header>
+    <div class="dashboard-container">
+        <section class="stats-cards">
+            <article class="card">
+                <h3><i class="fas fa-users"></i> Total Attendees</h3>
+                <p id="totalAttendees">{{ attendees }}</p>
+            </article>
+            <article class="card">
+                <h3><i class="fas fa-exclamation-triangle"></i> Active Incidents</h3>
+                <p id="activeIncidents">...</p>
+            </article>
+            <article class="card">
+                <h3><i class="fas fa-thermometer-half"></i> Heatmap Status</h3>
+                <p id="heatmapStatus">...</p>
+            </article>
+            <article class="card">
+                <h3><i class="fas fa-truck-medical"></i> Emergency Units Deployed</h3>
+                <p id="unitsDeployed">...</p>
+            </article>
+        </section>
+        <section class="heatmap-section">
+            <h2>Crowd Heatmap</h2>
+            <div id="heatmap">
+                <div class="zone {{ heatmap_zoneA | lower }}" id="zoneA">Zone A: {{ heatmap_zoneA }}</div>
+                <div class="zone {{ heatmap_zoneB | lower }}" id="zoneB">Zone B: {{ heatmap_zoneB }}</div>
+                <div class="zone {{ heatmap_zoneC | lower }}" id="zoneC">Zone C: {{ heatmap_zoneC }}</div>
+                <div class="zone {{ heatmap_zoneD | lower }}" id="zoneD">Zone D: {{ heatmap_zoneD }}</div>
+            </div>
+        </section>
+        <section class="emergency-actions">
+            <h2>Emergency Actions</h2>
+            <button id="dispatchAmbulance">Dispatch Ambulance</button>
+            <button id="alertSecurity">Alert Security</button>
+            <button id="broadcastMessage">Broadcast Public Message</button>
+        </section>
+        <section class="incident-log">
+            <h2>Incident Log</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Zone</th>
+                        <th>Severity</th>
+                        <th>Action Taken</th>
+                    </tr>
+                </thead>
+                <tbody id="incidentLogTableBody">
+                </tbody>
+            </table>
+        </section>
+        <section class="zone-summaries">
+            <h2>Zone Summaries</h2>
+            <div class="summaries-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Zone</th>
+                            <th>Summary</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Zone A</td>
+                            <td>{{ zone_A | safe }}</td>
+                        </tr>
+                        <tr>
+                            <td>Zone B</td>
+                            <td>{{ zone_B | safe }}</td>
+                        </tr>
+                        <tr>
+                            <td>Zone C</td>
+                            <td>{{ zone_C | safe }}</td>
+                        </tr>
+                        <tr>
+                            <td>Zone D</td>
+                            <td>{{ zone_D | safe }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="chatbot-section">
+            <h2>Chatbot</h2>
+            <div id="chatbox"></div>
+            <div class="chat-input">
+                <input type="text" id="userInput" placeholder="Type your message...">
+                <button id="sendButton" class="send-button"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </section>
+    </div>
+    <script>
+        const sendButton = document.getElementById('sendButton');
+        const userInput = document.getElementById('userInput');
+        const chatbox = document.getElementById('chatbox');
+        const zoneContext = {{ zone_summery_str|tojson }};
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const messageText = userInput.value.trim();
+            if (messageText === '') return;
+
+            const userMessageElement = document.createElement('div');
+            userMessageElement.classList.add('message', 'user');
+            userMessageElement.textContent = messageText;
+            chatbox.appendChild(userMessageElement);
+
+            userInput.value = '';
+            chatbox.scrollTop = chatbox.scrollHeight;
+
+            fetch('/chatbot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: messageText, context: zoneContext }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const agentMessageElement = document.createElement('div');
+                agentMessageElement.classList.add('message', 'agent');
+                agentMessageElement.textContent = data.response;
+                chatbox.appendChild(agentMessageElement);
+                chatbox.scrollTop = chatbox.scrollHeight;
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                const errorMessageElement = document.createElement('div');
+                errorMessageElement.classList.add('message', 'agent');
+                errorMessageElement.style.color = 'red';
+                errorMessageElement.textContent = 'Error communicating with chatbot.';
+                chatbox.appendChild(errorMessageElement);
+                chatbox.scrollTop = chatbox.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>

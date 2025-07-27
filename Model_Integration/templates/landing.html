@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Drishti - Event Safety Platform</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            padding: 2rem;
+        }
+        h1 {
+            color: #3b5a77;
+            font-size: 3rem;
+        }
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .actions a {
+            display: inline-block;
+            padding: 1rem 2rem;
+            margin: 0.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            font-size: 1.1rem;
+            transition: background-color 0.3s ease;
+        }
+        .actions .admin-link {
+            background-color: #3b5a77;
+        }
+        .actions .admin-link:hover {
+            background-color: #4a6b8a;
+        }
+        .actions .user-link {
+            background-color: #5a809e;
+        }
+        .actions .user-link:hover {
+            background-color: #6b96b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Project Drishti</h1>
+        <p>
+            <strong>Improving safety at large public events.</strong><br>
+            Project Drishti is an AI-powered situational awareness platform that acts as a central nervous system for event safety. This agent provides actionable intelligence to commanders, enabling them to anticipate and mitigate risks in real-time.
+        </p>
+        <div class="actions">
+            <a href="/dashboard" class="admin-link">Admin</a>
+            <a href="/upload" class="user-link">Report Missing Person</a>
+        </div>
+    </div>
+</body>
+</html>
